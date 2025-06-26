@@ -6,11 +6,19 @@ echo "Cloning 3v1n0's github repo for libfprint"
 git clone https://github.com/3v1n0/libfprint
 echo "Building libfprint fork"
 meson libfprint libfprint/_build && sudo ninja -C libfprint/_build install
+echo "Link new libfprind files to /lib64"
+sudo rm /lib64/libfprint-2.so.2
+sudo ln -s libfprint-2.so.2.0.0 /lib64/libfprint-2.so.2
+sudo ldconfig
 echo "Downloading older, but compatible fprintd version 1.90.9-2.rpm and the PAM module for  that fprintd"
 curl https://kojipkgs.fedoraproject.org//vol/fedora_koji_archive06/packages/fprintd/1.90.9/2.fc34/x86_64/fprintd-1.90.9-2.fc34.x86_64.rpm 
 curl https://kojipkgs.fedoraproject.org//vol/fedora_koji_archive06/packages/fprintd/1.90.9/2.fc34/x86_64/fprintd-pam-1.90.9-2.fc34.x86_64.rpm
 echo "Installing the older fprintd version"
  sudo rpm -i --nodeps fprintd-pam-1.90.9-2.fc34.x86_64.rpm fprintd-1.90.9-2.fc34.x86_64.rpm
+echo "Locking fprintd version so DNF update dosen't ruin everything"
+sudo dnf install 'dnf-command(versionlock)'
+sudo dnf versionlock add fprintd
+sudo dnf versionlock add fprint-pam
 echo "Setup PAM modules"
 sudo authselect enable-feature with-fingerprint
 sudo authselect apply-changes
